@@ -1,9 +1,9 @@
-# fly.toml file generated for my-chatgpt-bot-mongo on 2023-03-12T22:11:28+08:00
+# fly.toml file generated for my-chatgpt-bot-mongo on 2023-03-13T21:50:05+08:00
 
 app = "my-chatgpt-bot-mongo"
 kill_signal = "SIGINT"
 kill_timeout = 5
-primary_region = "lax"
+primary_region = "nrt"
 processes = []
 
 [env]
@@ -11,13 +11,14 @@ processes = []
 [experimental]
   auto_rollback = true
   cmd = ["mongod", "--ipv6"]
+
 [mounts]
   destination = "/data/db"
   source = "chatgpt_bot_data"
 
 [[services]]
-  internal_port = 27017
+  internal_port = 8080
   protocol = "tcp"
-[services.concurrency]
-  hard_limit = 10
-  soft_limit = 10
+  [services.concurrency]
+    hard_limit = 10
+    soft_limit = 10

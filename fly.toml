@@ -1,13 +1,12 @@
-# fly.toml file generated for my-chatgpt-bot1 on 2023-03-11T13:40:46+08:00
+# fly.toml file generated for my-chatgpt-bot on 2023-03-13T21:57:28+08:00
 
-app = "my-chatgpt-bot1"
+app = "my-chatgpt-bot"
 kill_signal = "SIGINT"
 kill_timeout = 5
-primary_region = "lax"
+primary_region = "nrt"
 
-
-[build.args]
-env-file = "config/config.env"
-MONGODB_PATH="/data/db"
-# MongoDB port
-MONGODB_PORT=27017
+[build]
+  [build.args]
+    MONGODB_PATH = "/data/db"
+    MONGODB_PORT = "27017"
+    env-file = "config/config.env"
