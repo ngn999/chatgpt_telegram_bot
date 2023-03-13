@@ -17,8 +17,15 @@ processes = []
   source = "chatgpt_bot_data"
 
 [[services]]
-  internal_port = 8080
+  internal_port = 27017
   protocol = "tcp"
   [services.concurrency]
+    type = "connections"
     hard_limit = 10
     soft_limit = 10
+
+[[services.tcp_checks]]
+  grace_period = "1s"
+  interval = "15s"
+  restart_limit = 3
+  timeout = "2s"
