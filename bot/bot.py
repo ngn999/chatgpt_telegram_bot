@@ -88,8 +88,7 @@ async def help_handle(update: Update, context: CallbackContext):
 
 async def retry_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
-    if await is_previous_message_not_answered_yet(update, context):
-        return
+    if await is_previous_message_not_answered_yet(update, context): return
     
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
@@ -112,8 +111,7 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
         return
         
     await register_user_if_not_exists(update, context, update.message.from_user)
-    if await is_previous_message_not_answered_yet(update, context):
-        return
+    if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
     chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
@@ -133,7 +131,6 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
             message = message or update.message.text
 
             dialog_messages = db.get_dialog_messages(user_id, dialog_id=None)
-            chat_mode = db.get_user_attribute(user_id, "current_chat_mode")
             parse_mode = {
                 "html": ParseMode.HTML,
                 "markdown": ParseMode.MARKDOWN
@@ -169,10 +166,11 @@ async def message_handle(update: Update, context: CallbackContext, message=None,
                     raise ValueError(f"Streaming status {status} is unknown")
 
                 answer = answer[:4096]  # telegram message limit
-                if len(answer) == 0:
-                    continue
-
                 if i == 0:  # send first message (then it'll be edited if message streaming is enabled)
+                    if len(answer) == 0:  # first answer chunk from openai was empty
+                        i = -1  # try again to send first message
+                        continue
+
                     try:                    
                         sent_message = await update.message.reply_text(answer, parse_mode=parse_mode)
                     except telegram.error.BadRequest:
@@ -232,8 +230,7 @@ async def is_previous_message_not_answered_yet(update: Update, context: Callback
 
 async def voice_message_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
-    if await is_previous_message_not_answered_yet(update, context):
-        return
+    if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
@@ -271,8 +268,7 @@ async def voice_message_handle(update: Update, context: CallbackContext):
 
 async def new_dialog_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
-    if await is_previous_message_not_answered_yet(update, context):
-        return
+    if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
@@ -286,8 +282,7 @@ async def new_dialog_handle(update: Update, context: CallbackContext):
 
 async def show_chat_modes_handle(update: Update, context: CallbackContext):
     await register_user_if_not_exists(update, context, update.message.from_user)
-    if await is_previous_message_not_answered_yet(update, context):
-        return
+    if await is_previous_message_not_answered_yet(update, context): return
 
     user_id = update.message.from_user.id
     db.set_user_attribute(user_id, "last_interaction", datetime.now())
@@ -311,11 +306,6 @@ async def set_chat_mode_handle(update: Update, context: CallbackContext):
 
     db.set_user_attribute(user_id, "current_chat_mode", chat_mode)
     db.start_new_dialog(user_id)
-
-    await query.edit_message_text(
-        f"<b>{openai_utils.CHAT_MODES[chat_mode]['name']}</b> chat mode is set",
-        parse_mode=ParseMode.HTML
-    )
 
     await query.edit_message_text(f"{openai_utils.CHAT_MODES[chat_mode]['welcome_message']}", parse_mode=ParseMode.HTML)
 
